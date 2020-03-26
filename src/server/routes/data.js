@@ -1,17 +1,29 @@
-const express = require("express");
-const fs = require("fs");
-const jsdom = require("jsdom");
+const express = require('express');
+const fs = require('fs');
+const jsdom = require('jsdom');
 
-const fetchHelper = require("../helpers/fetch");
-const fileHelper = require("../helpers/file");
+const fetchHelper = require('../helpers/fetch');
+const fileHelper = require('../helpers/file');
 
 const router = express.Router();
 const { JSDOM } = jsdom;
 
 // GET /data/{lineNo}
-router.get("/:line", async (req, res) => {
+router.get('/:line', async (req, res) => {
   const filename = `./data/${req.params.line}.txt`;
-  res.set("Content-Type", "application/json");
+  res.set('Content-Type', 'application/json');
+
+  if (fs.existsSync(filename)) {
+    fileHelper.readFile(filename)
+      .then((data) => {
+        res.send(JSON.stringify({ body: data }));
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  } else {
+    console.log('No files');
+  }
 
   // TODO : Help function을 이용하여, 주어진 filename의 내용을 읽을 수 있도록 구현하세요.
   /*
@@ -20,9 +32,19 @@ router.get("/:line", async (req, res) => {
 });
 
 // POST /data/{lineNo}
-router.post("/:line", async (req, res) => {
+router.post('/:line', async (req, res) => {
   const lineNo = req.params.line;
-
+  fileHelper.readLineFromSourceList(lineNo)
+    .then((url) => fetchHelper.retrieveArticle(url))
+    .then((html) => {
+      const dom = new JSDOM(html);
+      const text = dom.window.document.querySelector('article').textContent;
+      fileHelper.writeFile(`data/${lineNo}.txt`, text);
+      res.send('Ok');
+    })
+    .catch((err) => {
+      console.log(err);
+    });
   // TODO : Help function을 이용하여, 주어진 filename에 내용을 저장할 수 있도록 구현하세요.
   /*
    * Hint : Helper function(readLineFromSourceList, retrieveArticle, wrtieFile)이 필요할 것 입니다.

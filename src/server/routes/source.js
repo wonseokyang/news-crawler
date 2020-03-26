@@ -1,16 +1,28 @@
-const express = require("express");
-const fileHelper = require("../helpers/file");
+const express = require('express');
+const fileHelper = require('../helpers/file');
 
 const router = express.Router();
 
 // GET /source
-router.get("/", async (req, res) => {
-  // TODO: Help function을 이용하여, source.txt의 내용을 반환 수 있도록 구현하세요.
+router.get('/', async (req, res) => {
+  fileHelper.readSourceListFile()
+    .then((data) => {
+      res.status(200).send(data);
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 // POST /source
-router.post("/", async (req, res) => {
-  // TODO: Help function을 이용하여, source.txt의 내용으로 저장할 수 있도록 구현하세요.
+router.post('/', async (req, res) => {
+  fileHelper.writeSourceListFile(req.body)
+    .then(() => {
+      res.status(201).send('Ok');
+    })
+    .catch((err) => {
+      console.log(err);
+    });
 });
 
 module.exports = router;
